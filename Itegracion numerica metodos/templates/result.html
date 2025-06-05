@@ -1,139 +1,1042 @@
-<!-- templates/result.html -->
+<!-- templates/results.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resultados - Métodos de Integración Numérica</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
     <style>
-        body {
-            padding-top: 2rem;
-            padding-bottom: 2rem;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #2d1b69 100%);
+            color: #e0e6ed;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .math-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.03;
+            background-image:
+                radial-gradient(circle at 25% 25%, #4a90e2 2px, transparent 2px),
+                radial-gradient(circle at 75% 75%, #7b68ee 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
         .header {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(75, 144, 226, 0.2);
         }
-        .result-container {
-            margin-bottom: 2rem;
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #4a90e2, #7b68ee, #9370db);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
         }
-        .result-graph {
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(75, 144, 226, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .panel h3 {
+            color: #4a90e2;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            border-bottom: 2px solid rgba(75, 144, 226, 0.3);
+            padding-bottom: 10px;
+        }
+
+        .problem-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .info-card {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(75, 144, 226, 0.3);
+        }
+
+        .info-card strong {
+            color: #4a90e2;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .chart-container {
+            height: 500px;
+            margin: 20px 0;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px;
             text-align: center;
-            margin: 2rem 0;
+            border: 1px solid rgba(75, 144, 226, 0.3);
         }
-        .table-container {
-            margin-top: 2rem;
+
+        .comparison-table th {
+            background: linear-gradient(45deg, rgba(75, 144, 226, 0.3), rgba(123, 104, 238, 0.3));
+            color: #4a90e2;
+            font-weight: bold;
         }
-        .math {
-            display: inline-block;
-            margin: 0 0.2em;
+
+        .comparison-table tr:nth-child(even) {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .comparison-table tr:hover {
+            background: rgba(75, 144, 226, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .analytical-row {
+            background: rgba(255, 99, 132, 0.1) !important;
+            border: 2px solid rgba(255, 99, 132, 0.3);
+        }
+
+        .steps-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+
+        .steps-table th,
+        .steps-table td {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid rgba(75, 144, 226, 0.2);
+        }
+
+        .steps-table th {
+            background: rgba(75, 144, 226, 0.2);
+            color: #4a90e2;
+        }
+
+        .method-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            border: 1px solid rgba(75, 144, 226, 0.3);
+        }
+
+        .method-section h4 {
+            color: #7b68ee;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .export-btn {
+            padding: 12px 20px;
+            background: linear-gradient(45deg, rgba(147, 112, 219, 0.3), rgba(123, 104, 238, 0.3));
+            border: 1px solid rgba(147, 112, 219, 0.5);
+            border-radius: 8px;
+            color: #e0e6ed;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .export-btn:hover {
+            background: linear-gradient(45deg, rgba(147, 112, 219, 0.5), rgba(123, 104, 238, 0.5));
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(147, 112, 219, 0.4);
+        }
+
+        .back-btn {
+            background: linear-gradient(45deg, #4a90e2, #7b68ee);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(74, 144, 226, 0.4);
+        }
+
+        .statistics-panel {
+            background: rgba(147, 112, 219, 0.1);
+            border: 1px solid rgba(147, 112, 219, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(147, 112, 219, 0.3);
+        }
+
+        .stat-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #9370db;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #b8c5d1;
+            font-size: 0.9em;
+        }
+
+        .error-analysis {
+            margin-top: 20px;
+        }
+
+        .error-chart {
+            height: 300px;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .problem-info {
+                grid-template-columns: 1fr;
+            }
+
+            .export-buttons {
+                flex-direction: column;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .comparison-table,
+            .steps-table {
+                font-size: 0.8em;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="math-pattern"></div>
+
     <div class="container">
+        <a href="/" class="back-btn">
+            ← Volver al Dashboard
+        </a>
+
         <div class="header">
-            <h1>Resultados</h1>
-            <p class="lead">{{ result.method }} para la ecuación diferencial \(y' = {{ result.function }}\)</p>
+            <h1>📊 Resultados del Análisis</h1>
+            <p>
+                {% if result.equation_type == 'first' %}
+                    Ecuación de 1er Orden: \(y' = {{ result.formula }}\)
+                {% else %}
+                    Ecuación de 2do Orden: \(y'' = {{ result.formula }}\)
+                {% endif %}
+            </p>
         </div>
 
-        <div class="row">
-            <div class="col-md-10 offset-md-1">
-                <div class="card result-container">
-                    <div class="card-body">
-                        <h4>Datos del problema</h4>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p><strong>Ecuación:</strong> \(y' = {{ result.function }}\)</p>
-                                <p><strong>Punto inicial:</strong> \((x_0, y_0) = ({{ result.x0 }}, {{ result.y0 }})\)</p>
-                                <p><strong>Punto final:</strong> \(x_f = {{ result.xf }}\)</p>
-                            </div>
-                            <div class="col-md-6">
-                                <p><strong>Método:</strong> {{ result.method }}</p>
-                                <p><strong>Número de pasos:</strong> {{ result.n }}</p>
-                                <p><strong>Tamaño del paso:</strong> \(h = {{ "%.6f"|format(result.h) }}\)</p>
-                            </div>
-                        </div>
+        <div class="results-grid">
+            <!-- Panel de Información del Problema -->
+            <div class="panel">
+                <h3>📋 Información del Problema</h3>
+                <div class="problem-info">
+                    <div class="info-card">
+                        <strong>Ecuación</strong>
+                        {% if result.equation_type == 'first' %}
+                            \(y' = {{ result.formula }}\)
+                        {% else %}
+                            \(y'' = {{ result.formula }}\)
+                        {% endif %}
+                    </div>
+                    <div class="info-card">
+                        <strong>Condiciones Iniciales</strong>
+                        \((x_0, y_0) = ({{ result.x0 }}, {{ result.y0 }})\)
+                        {% if result.equation_type == 'second' %}
+                            <br>\(y'_0 = {{ result.yp0 }}\)
+                        {% endif %}
+                    </div>
+                    <div class="info-card">
+                        <strong>Intervalo de Integración</strong>
+                        \([{{ result.x0 }}, {{ result.xf }}]\)
+                    </div>
+                    <div class="info-card">
+                        <strong>Parámetros Numéricos</strong>
+                        n = {{ result.n }}, h = {{ "%.6f"|format(result.h) }}
+                    </div>
+                </div>
+            </div>
 
-                        <div class="result-graph">
-                            <h4>Gráfica de la solución</h4>
-                            <img src="data:image/png;base64,{{ result.image }}" alt="Gráfica de solución" class="img-fluid">
-                        </div>
+            <!-- Panel de Gráfica -->
+            <div class="panel">
+                <h3>📈 Gráfica de Comparación</h3>
+                <div class="chart-container">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+            </div>
 
-                        <div class="table-container">
-                            <h4>Proceso paso a paso</h4>
-                            {% if result.method == 'Método de Euler' %}
-                                <div class="table-responsive">
-                                    <table class="table table-striped table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th>Paso</th>
-                                                <th>\(x_i\)</th>
-                                                <th>\(y_i\)</th>
-                                                <th>\(f(x_i, y_i)\)</th>
-                                                <th>\(h \cdot f(x_i, y_i)\)</th>
-                                                <th>\(x_{i+1}\)</th>
-                                                <th>\(y_{i+1}\)</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for step in result.steps %}
-                                            <tr>
-                                                <td>{{ step.step }}</td>
-                                                <td>{{ "%.6f"|format(step.x) }}</td>
-                                                <td>{{ "%.6f"|format(step.y) }}</td>
-                                                <td>{{ "%.6f"|format(step["f(x,y)"]) }}</td>
-                                                <td>{{ "%.6f"|format(step["h*f(x,y)"]) }}</td>
-                                                <td>{{ "%.6f"|format(step.x_next) }}</td>
-                                                <td>{{ "%.6f"|format(step.y_next) }}</td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            {% elif result.method == 'Método de Heun' %}
-                                <div class="table-responsive">
-                                    <table class="table table-striped table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th>Paso</th>
-                                                <th>\(x_i\)</th>
-                                                <th>\(y_i\)</th>
-                                                <th>\(k_1 = f(x_i, y_i)\)</th>
-                                                <th>\(y_{pred}\)</th>
-                                                <th>\(k_2 = f(x_i + h, y_{pred})\)</th>
-                                                <th>\(y_{i+1}\)</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for step in result.steps %}
-                                            <tr>
-                                                <td>{{ step.step }}</td>
-                                                <td>{{ "%.6f"|format(step.x) }}</td>
-                                                <td>{{ "%.6f"|format(step.y) }}</td>
-                                                <td>{{ "%.6f"|format(step.k1) }}</td>
-                                                <td>{{ "%.6f"|format(step.y_pred) }}</td>
-                                                <td>{{ "%.6f"|format(step.k2) }}</td>
-                                                <td>{{ "%.6f"|format(step.y_next) }}</td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
+            <!-- Panel de Tabla de Comparación -->
+            {% if result.results|length > 1 %}
+            <div class="panel">
+                <h3>📊 Tabla de Comparación</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Método</th>
+                            <th>Valor Final</th>
+                            <th>Error Absoluto</th>
+                            <th>Error Relativo (%)</th>
+                            <th>Tiempo (ms)</th>
+                            <th>Eficiencia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+{% if 'analytical' in result.results %}
+    {% set reference_value = result.results.analytical.points[-1].y %}
+{% elif 'rk4' in result.results %}
+    {% set reference_value = result.results.rk4.points[-1].y %}
+{% else %}
+    {% set reference_value = 0 %}
+{% endif %}
+
+                        {% for method, data in result.results.items() %}
+                            {% if method != 'analytical' and data.points %}
+                                {% set final_value = data.points[-1].y %}
+                                {% set abs_error = (final_value - reference_value)|abs if reference_value else 0 %}
+                                {% set rel_error = (abs_error / reference_value|abs * 100) if reference_value else 0 %}
+                                <tr>
+                                    <td><strong>{{ data.name }}</strong></td>
+                                    <td>{{ "%.8f"|format(final_value) }}</td>
+                                    <td>{{ "%.2e"|format(abs_error) }}</td>
+                                    <td>{{ "%.4f"|format(rel_error) }}%</td>
+                                    <td>{{ "%.2f"|format(data.time) }}</td>
+                                    <td>{{ "%.2f"|format(1000 / (abs_error * 1000 + data.time + 1)) }}</td>
+                                </tr>
                             {% endif %}
-                        </div>
+                        {% endfor %}
 
-                        <div class="d-grid gap-2 mt-4">
-                            <a href="/" class="btn btn-primary">Resolver otro problema</a>
+                        {% if 'analytical' in result.results %}
+                        <tr class="analytical-row">
+                            <td><strong>Solución Analítica</strong></td>
+                            <td>{{ "%.8f"|format(reference_value) }}</td>
+                            <td>0.00e+00</td>
+                            <td>0.0000%</td>
+                            <td>-</td>
+                            <td>∞</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            <!-- Panel de Estadísticas Avanzadas -->
+            <div class="panel">
+                <h3>📈 Estadísticas Avanzadas</h3>
+                <div class="statistics-panel">
+                    <h4 style="color: #9370db; margin-bottom: 15px;">🎯 Análisis de Convergencia</h4>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="maxError">-</div>
+                            <div class="stat-label">Error Máximo</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="avgError">-</div>
+                            <div class="stat-label">Error Promedio</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="bestMethod">-</div>
+                            <div class="stat-label">Método Más Preciso</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalTime">-</div>
+                            <div class="stat-label">Tiempo Total (ms)</div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Análisis de Error -->
+                <div class="error-analysis">
+                    <h4 style="color: #7b68ee; margin-bottom: 15px;">📉 Evolución del Error</h4>
+                    <div class="error-chart">
+                        <canvas id="errorChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel de Análisis Paso a Paso -->
+            <div class="panel">
+                <h3>🔍 Análisis Paso a Paso</h3>
+                {% for method, data in result.results.items() %}
+                    {% if method != 'analytical' and data.steps %}
+                    <div class="method-section">
+                        <h4>
+                            {% if method == 'euler' %}🔵{% elif method == 'heun' %}🟣{% elif method == 'rk4' %}🟢{% endif %}
+                            {{ data.name }}
+                        </h4>
+
+                        {% if result.equation_type == 'first' %}
+                            {% if method == 'euler' %}
+                            <table class="steps-table">
+                                <thead>
+                                    <tr>
+                                        <th>Paso</th>
+                                        <th>\(x_i\)</th>
+                                        <th>\(y_i\)</th>
+                                        <th>\(f(x_i, y_i)\)</th>
+                                        <th>\(h \cdot f(x_i, y_i)\)</th>
+                                        <th>\(y_{i+1}\)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for step in data.steps[:5] %}
+                                    <tr>
+                                        <td>{{ step.step }}</td>
+                                        <td>{{ "%.4f"|format(step.x) }}</td>
+                                        <td>{{ "%.6f"|format(step.y) }}</td>
+                                        <td>{{ "%.6f"|format(step.f_xy) }}</td>
+                                        <td>{{ "%.6f"|format(step.h_f_xy) }}</td>
+                                        <td>{{ "%.6f"|format(step.y_next) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% if data.steps|length > 5 %}
+                                    <tr>
+                                        <td colspan="6" style="text-align: center; font-style: italic;">
+                                            ... y {{ data.steps|length - 5 }} pasos más
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                            {% elif method == 'heun' %}
+                            <table class="steps-table">
+                                <thead>
+                                    <tr>
+                                        <th>Paso</th>
+                                        <th>\(x_i\)</th>
+                                        <th>\(y_i\)</th>
+                                        <th>\(k_1\)</th>
+                                        <th>\(y_{pred}\)</th>
+                                        <th>\(k_2\)</th>
+                                        <th>\(y_{i+1}\)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for step in data.steps[:5] %}
+                                    <tr>
+                                        <td>{{ step.step }}</td>
+                                        <td>{{ "%.4f"|format(step.x) }}</td>
+                                        <td>{{ "%.6f"|format(step.y) }}</td>
+                                        <td>{{ "%.6f"|format(step.k1) }}</td>
+                                        <td>{{ "%.6f"|format(step.y_pred) }}</td>
+                                        <td>{{ "%.6f"|format(step.k2) }}</td>
+                                        <td>{{ "%.6f"|format(step.y_next) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% if data.steps|length > 5 %}
+                                    <tr>
+                                        <td colspan="7" style="text-align: center; font-style: italic;">
+                                            ... y {{ data.steps|length - 5 }} pasos más
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                            {% elif method == 'rk4' %}
+                            <table class="steps-table">
+                                <thead>
+                                    <tr>
+                                        <th>Paso</th>
+                                        <th>\(x_i\)</th>
+                                        <th>\(y_i\)</th>
+                                        <th>\(k_1\)</th>
+                                        <th>\(k_2\)</th>
+                                        <th>\(k_3\)</th>
+                                        <th>\(k_4\)</th>
+                                        <th>\(y_{i+1}\)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for step in data.steps[:5] %}
+                                    <tr>
+                                        <td>{{ step.step }}</td>
+                                        <td>{{ "%.4f"|format(step.x) }}</td>
+                                        <td>{{ "%.6f"|format(step.y) }}</td>
+                                        <td>{{ "%.6f"|format(step.k1) }}</td>
+                                        <td>{{ "%.6f"|format(step.k2) }}</td>
+                                        <td>{{ "%.6f"|format(step.k3) }}</td>
+                                        <td>{{ "%.6f"|format(step.k4) }}</td>
+                                        <td>{{ "%.6f"|format(step.y_next) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% if data.steps|length > 5 %}
+                                    <tr>
+                                        <td colspan="8" style="text-align: center; font-style: italic;">
+                                            ... y {{ data.steps|length - 5 }} pasos más
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                            {% endif %}
+                        {% else %}
+                            <!-- Tablas para ecuaciones de segundo orden -->
+                            <table class="steps-table">
+                                <thead>
+                                    <tr>
+                                        <th>Paso</th>
+                                        <th>\(x_i\)</th>
+                                        <th>\(y_i\)</th>
+                                        <th>\(y'_i\)</th>
+                                        <th>\(y''_i\)</th>
+                                        <th>\(y_{i+1}\)</th>
+                                        <th>\(y'_{i+1}\)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for step in data.steps[:5] %}
+                                    <tr>
+                                        <td>{{ step.step }}</td>
+                                        <td>{{ "%.4f"|format(step.x) }}</td>
+                                        <td>{{ "%.6f"|format(step.y) }}</td>
+                                        <td>{{ "%.6f"|format(step.yp) }}</td>
+{% if 'ypp' in step %}
+    {% set value = step.ypp %}
+{% elif 'k1yp' in step %}
+    {% set value = step.k1yp %}
+{% else %}
+    {% set value = 0 %}
+{% endif %}
+
+<td>{{ "%.6f"|format(value) }}</td>
+                                        <td>{{ "%.6f"|format(step.y_next) }}</td>
+                                        <td>{{ "%.6f"|format(step.yp_next if 'yp_next' in step else 0) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% if data.steps|length > 5 %}
+                                    <tr>
+                                        <td colspan="7" style="text-align: center; font-style: italic;">
+                                            ... y {{ data.steps|length - 5 }} pasos más
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- Panel de Exportación -->
+            <div class="panel">
+                <h3>💾 Exportar Resultados</h3>
+                <div class="export-buttons">
+                    <button class="export-btn" onclick="exportToPDF()">
+                        📄 Generar Reporte PDF
+                    </button>
+                    <button class="export-btn" onclick="exportToCSV()">
+                        📊 Exportar Datos CSV
+                    </button>
+                    <button class="export-btn" onclick="exportChart()">
+                        🖼️ Guardar Gráfica
+                    </button>
+                    <button class="export-btn" onclick="showAdvancedStats()">
+                        📈 Estadísticas Detalladas
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Datos del resultado pasados desde Flask
+        const resultData = {{ result|tojson }};
+        let comparisonChart = null;
+        let errorChart = null;
+
+        // Configuración de MathJax
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+
+        // Crear gráfica de comparación
+        function createComparisonChart() {
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
+
+            const colors = {
+                euler: '#4a90e2',
+                heun: '#7b68ee',
+                rk4: '#9370db',
+                analytical: '#ff6384'
+            };
+
+            const datasets = [];
+
+            // Agregar datasets de métodos
+            for (const [method, data] of Object.entries(resultData.results)) {
+                if (data.points && data.points.length > 0) {
+                    const points = data.points.map(p => ({x: p.x, y: p.y}));
+
+                    datasets.push({
+                        label: data.name,
+                        data: points,
+                        borderColor: colors[method] || '#ffffff',
+                        backgroundColor: (colors[method] || '#ffffff') + '20',
+                        fill: false,
+                        tension: 0.1,
+                        pointRadius: method === 'analytical' ? 1 : 3,
+                        pointHoverRadius: 5,
+                        borderWidth: method === 'analytical' ? 3 : 2,
+                        borderDash: method === 'analytical' ? [5, 5] : []
+                    });
+                }
+            }
+
+            comparisonChart = new Chart(ctx, {
+                type: 'line',
+                data: { datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Comparación de Métodos Numéricos - ${resultData.equation_type === 'first' ? '1er' : '2do'} Orden`,
+                            color: '#e0e6ed',
+                            font: { size: 16 }
+                        },
+                        legend: {
+                            labels: {
+                                color: '#e0e6ed',
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 15, 35, 0.9)',
+                            titleColor: '#e0e6ed',
+                            bodyColor: '#e0e6ed',
+                            borderColor: '#4a90e2',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'x',
+                                color: '#e0e6ed',
+                                font: { size: 14 }
+                            },
+                            ticks: {
+                                color: '#b8c5d1',
+                                font: { size: 12 }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)',
+                                drawBorder: false
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'y',
+                                color: '#e0e6ed',
+                                font: { size: 14 }
+                            },
+                            ticks: {
+                                color: '#b8c5d1',
+                                font: { size: 12 }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)',
+                                drawBorder: false
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+        }
+
+        // Crear gráfica de evolución del error
+        function createErrorChart() {
+            const ctx = document.getElementById('errorChart').getContext('2d');
+
+            if (!resultData.results.analytical) {
+                ctx.fillStyle = '#e0e6ed';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('No hay solución analítica para comparar errores', ctx.canvas.width/2, ctx.canvas.height/2);
+                return;
+            }
+
+            const analyticalPoints = resultData.results.analytical.points;
+            const datasets = [];
+
+            const colors = {
+                euler: '#4a90e2',
+                heun: '#7b68ee',
+                rk4: '#9370db'
+            };
+
+            for (const [method, data] of Object.entries(resultData.results)) {
+                if (method !== 'analytical' && data.points) {
+                    const errors = data.points.map((point, index) => {
+                        if (index < analyticalPoints.length) {
+                            return {
+                                x: point.x,
+                                y: Math.abs(point.y - analyticalPoints[index].y)
+                            };
+                        }
+                        return {x: point.x, y: 0};
+                    });
+
+                    datasets.push({
+                        label: `Error ${data.name}`,
+                        data: errors,
+                        borderColor: colors[method],
+                        backgroundColor: colors[method] + '20',
+                        fill: false,
+                        tension: 0.1,
+                        pointRadius: 2
+                    });
+                }
+            }
+
+            errorChart = new Chart(ctx, {
+                type: 'line',
+                data: { datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Evolución del Error Absoluto',
+                            color: '#e0e6ed',
+                            font: { size: 14 }
+                        },
+                        legend: {
+                            labels: { color: '#e0e6ed' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'x',
+                                color: '#e0e6ed'
+                            },
+                            ticks: { color: '#b8c5d1' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        y: {
+                            type: 'logarithmic',
+                            title: {
+                                display: true,
+                                text: 'Error Absoluto (log)',
+                                color: '#e0e6ed'
+                            },
+                            ticks: { color: '#b8c5d1' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Calcular y mostrar estadísticas
+        function calculateStatistics() {
+            const referenceValue = resultData.results.analytical ?
+                resultData.results.analytical.points[resultData.results.analytical.points.length - 1].y :
+                resultData.results.rk4?.points[resultData.results.rk4.points.length - 1].y || 0;
+
+            let maxError = 0;
+            let totalError = 0;
+            let errorCount = 0;
+            let bestMethod = '';
+            let minError = Infinity;
+            let totalTime = 0;
+
+            for (const [method, data] of Object.entries(resultData.results)) {
+                if (method !== 'analytical' && data.points) {
+                    const finalValue = data.points[data.points.length - 1].y;
+                    const error = Math.abs(finalValue - referenceValue);
+
+                    maxError = Math.max(maxError, error);
+                    totalError += error;
+                    errorCount++;
+                    totalTime += data.time || 0;
+
+                    if (error < minError) {
+                        minError = error;
+                        bestMethod = data.name;
+                    }
+                }
+            }
+
+            const avgError = errorCount > 0 ? totalError / errorCount : 0;
+
+            // Actualizar elementos
+            document.getElementById('maxError').textContent = maxError.toExponential(2);
+            document.getElementById('avgError').textContent = avgError.toExponential(2);
+            document.getElementById('bestMethod').textContent = bestMethod || 'N/A';
+            document.getElementById('totalTime').textContent = totalTime.toFixed(2);
+        }
+
+        // Funciones de exportación
+        async function exportToPDF() {
+            try {
+                const response = await fetch('/export/pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        results: resultData.results,
+                        parameters: {
+                            formula: resultData.formula,
+                            x0: resultData.x0,
+                            y0: resultData.y0,
+                            xf: resultData.xf,
+                            n: resultData.n,
+                            h: resultData.h
+                        },
+                        chart: comparisonChart.toBase64Image()
+                    })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `reporte_integracion_${new Date().toISOString().slice(0, 10)}.pdf`;
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                } else {
+                    alert('Error al generar el PDF');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al exportar a PDF');
+            }
+        }
+
+        async function exportToCSV() {
+            try {
+                const response = await fetch('/export/csv', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        results: resultData.results
+                    })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `datos_integracion_${new Date().toISOString().slice(0, 10)}.csv`;
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                } else {
+                    alert('Error al generar el CSV');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al exportar a CSV');
+            }
+        }
+
+        function exportChart() {
+            if (!comparisonChart) {
+                alert('No hay gráfica para exportar');
+                return;
+            }
+
+            const url = comparisonChart.toBase64Image();
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `grafica_comparacion_${new Date().toISOString().slice(0, 10)}.png`;
+            a.click();
+        }
+
+        function showAdvancedStats() {
+            const referenceValue = resultData.results.analytical ?
+                resultData.results.analytical.points[resultData.results.analytical.points.length - 1].y :
+                null;
+
+            let statsText = '📊 ESTADÍSTICAS DETALLADAS\n\n';
+
+            // Análisis de convergencia
+            statsText += '🎯 Análisis de Convergencia:\n';
+
+            if (referenceValue !== null) {
+                let bestMethod = '';
+                let minError = Infinity;
+
+                for (const [method, data] of Object.entries(resultData.results)) {
+                    if (method !== 'analytical' && data.points) {
+                        const finalValue = data.points[data.points.length - 1].y;
+                        const error = Math.abs(finalValue - referenceValue);
+
+                        if (error < minError) {
+                            minError = error;
+                            bestMethod = data.name;
+                        }
+
+                        statsText += `• ${data.name}: Error = ${error.toExponential(4)}\n`;
+                    }
+                }
+
+                statsText += `\n🏆 Método más preciso: ${bestMethod}\n`;
+                statsText += `📏 Error mínimo: ${minError.toExponential(4)}\n\n`;
+            }
+
+            // Análisis de eficiencia
+            statsText += '⚡ Análisis de Eficiencia:\n';
+            for (const [method, data] of Object.entries(resultData.results)) {
+                if (method !== 'analytical' && data.points) {
+                    const time = data.time || 0;
+                    const finalValue = data.points[data.points.length - 1].y;
+                    const error = referenceValue ? Math.abs(finalValue - referenceValue) : 0;
+                    const efficiency = time > 0 ? (1 / (error + 1e-10)) / time : 0;
+
+                    statsText += `• ${data.name}: ${efficiency.toFixed(2)} (precisión/tiempo)\n`;
+                }
+            }
+
+            // Recomendaciones
+            statsText += '\n💡 Recomendaciones:\n';
+
+            if (referenceValue !== null) {
+                const maxError = Math.max(...Object.entries(resultData.results)
+                    .filter(([method]) => method !== 'analytical')
+                    .map(([, data]) => data.points ? Math.abs(data.points[data.points.length - 1].y - referenceValue) : 0));
+
+                if (maxError > 1e-3) {
+                    statsText += '• Considera reducir el tamaño del paso (h) para mayor precisión\n';
+                }
+            }
+
+            if ('rk4' in resultData.results && 'euler' in resultData.results) {
+                statsText += '• RK4 ofrece mayor precisión que Euler para el mismo costo\n';
+            }
+
+            statsText += '• Para ecuaciones rígidas, considera métodos implícitos\n';
+            statsText += '• Verifica la estabilidad numérica si hay oscilaciones';
+
+            alert(statsText);
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            createComparisonChart();
+            createErrorChart();
+            calculateStatistics();
+
+            // Renderizar MathJax
+            MathJax.typesetPromise().catch(err => console.log('MathJax error:', err));
+        });
+
+        // Manejo de redimensionamiento
+        window.addEventListener('resize', function() {
+            if (comparisonChart) {
+                comparisonChart.resize();
+            }
+            if (errorChart) {
+                errorChart.resize();
+            }
+        });
+    </script>
 </body>
 </html>
